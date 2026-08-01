@@ -887,7 +887,7 @@
                 showToast('구글 시트로 저장하는 중...');
 
                 const form = document.createElement('form');
-                form.method = 'GET';
+                form.method = 'POST';
                 form.action = sheetUrl;
                 form.target = 'sheetTargetFrame';
                 form.style.display = 'none';
