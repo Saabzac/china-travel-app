@@ -278,7 +278,7 @@
                                     <!-- 이미지 로딩용 오버레이 스피너 -->
                                     <div id="imageLoader" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center text-white hidden">
                                         <i class="fa-solid fa-circle-notch animate-spin text-3xl mb-2 text-rose-400"></i>
-                                        <span class="text-xs text-rose-100">Imagen 4.0이 드로잉 하는 중...</span>
+                                        <span class="text-xs text-rose-100">Nano Banana가 드로잉 하는 중...</span>
                                     </div>
                                 </div>
                             </div>
@@ -404,7 +404,7 @@
     <!-- 푸터 -->
     <footer class="bg-white border-t border-slate-200 py-6 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400 space-y-2">
-            <p>© 2026 중국 여행 감성 기획 발전소. Powered by Gemini 3 Flash & Imagen 4.0.</p>
+            <p>© 2026 중국 여행 감성 기획 발전소. Powered by Gemini 3 Flash & Gemini 2.5 Flash Image.</p>
             <p>언제든 제목이나 문구를 더블클릭/수정하여 귀하의 실제 여정과 피드백에 완벽하게 일치시킬 수 있습니다.</p>
         </div>
     </footer>
@@ -662,7 +662,7 @@
                 renderParsedContent(parsedData, dest, vibe, platform);
 
                 // 썸네일 이미지 자동 생성
-                updateProgress(90, 'Imagen 4.0으로 독창적인 고품질 시각 이미지를 그리는 중...');
+                updateProgress(90, 'Nano Banana로 독창적인 고품질 시각 이미지를 그리는 중...');
                 await generateThumbnailImage(parsedData.imagePrompt);
 
                 // 화면 전환 완료
@@ -787,14 +787,13 @@
             try {
                 const apiKey = getApiKey();
                 if (!apiKey) { throw new Error('API 키 없음'); }
-                const imageUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+                const imageUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
 
                 const response = await fetch(imageUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        instances: [{ prompt: prompt }],
-                        parameters: { "sampleCount": 1 }
+                        contents: [{ parts: [{ text: prompt }] }]
                     })
                 });
 
@@ -805,12 +804,15 @@
                 }
                 
                 const result = await response.json();
-                const base64Data = result.predictions?.[0]?.bytesBase64Encoded;
+                const parts = result.candidates?.[0]?.content?.parts || [];
+                const imagePart = parts.find(p => p.inlineData);
+                const base64Data = imagePart?.inlineData?.data;
+                const mimeType = imagePart?.inlineData?.mimeType || 'image/png';
                 
                 if (base64Data) {
-                    imgEl.src = `data:image/png;base64,${base64Data}`;
+                    imgEl.src = `data:${mimeType};base64,${base64Data}`;
                 } else {
-                    throw new Error('인코딩 데이터 유실 (predictions 응답 없음)');
+                    throw new Error('인코딩 데이터 유실 (이미지 파트 없음)');
                 }
             } catch (err) {
                 console.error(err);
@@ -861,7 +863,7 @@
                 Reflect the following feedback instructions to modify the JSON data appropriately:
                 "${feedback}"
 
-                Return the response strictly in the exact same JSON schema format as before. Do not include any text before or after the JSON structure. Make sure titles, marketingCopy, and script are in Korean, and imagePrompt remains a high-quality descriptive English prompt for Imagen 4.0.`;
+                Return the response strictly in the exact same JSON schema format as before. Do not include any text before or after the JSON structure. Make sure titles, marketingCopy, and script are in Korean, and imagePrompt remains a high-quality descriptive English prompt for an AI image generator.`;
 
                 const apiKey = getApiKey();
                 if (!apiKey) { showToast('Gemini API 키가 설정되지 않았습니다. 설정(⚙️)에서 입력해 주세요.', false); openSettingsModal(); throw new Error('API 키 없음'); }
