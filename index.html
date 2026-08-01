@@ -793,7 +793,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        instances: { prompt: prompt },
+                        instances: [{ prompt: prompt }],
                         parameters: { "sampleCount": 1 }
                     })
                 });
@@ -810,12 +810,12 @@
                 if (base64Data) {
                     imgEl.src = `data:image/png;base64,${base64Data}`;
                 } else {
-                    throw new Error('인코딩 데이터 유실');
+                    throw new Error('인코딩 데이터 유실 (predictions 응답 없음)');
                 }
             } catch (err) {
                 console.error(err);
                 imgEl.src = "https://placehold.co/640x360/ffe4e6/f43f5e?text=Thumbnail+Load+Failed";
-                showToast('썸네일을 그리는 데 실패했습니다. 프롬프트를 확인하고 다시 재생성해 주세요.', false);
+                showToast('썸네일 생성 실패: ' + err.message, false);
             } finally {
                 loader.classList.add('hidden');
             }
