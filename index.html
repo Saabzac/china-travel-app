@@ -78,6 +78,18 @@
             <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-rose-600 hover:underline mb-4 inline-block">
                 <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Google AI Studio에서 무료 API 키 발급받기
             </a>
+
+            <hr class="my-4 border-slate-100">
+
+            <h3 class="text-sm font-bold text-slate-800 mb-2">
+                <i class="fa-solid fa-table text-emerald-600 mr-2"></i>구글 시트 저장 (선택사항)
+            </h3>
+            <p class="text-xs text-slate-500 mb-3 leading-relaxed">
+                결과를 구글 시트에 자동으로 쌓고 싶다면, Apps Script 웹 앱 URL을 등록하세요.
+            </p>
+            <input id="sheetUrlInput" type="text" placeholder="https://script.google.com/macros/s/.../exec"
+                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+
             <div class="flex gap-2 mt-2">
                 <button onclick="saveApiKey()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-lg transition">
                     저장
@@ -252,6 +264,9 @@
                             <span class="text-xs text-slate-400 font-medium">직접 본문 텍스트를 클릭하여 편집 가능</span>
                         </div>
                         <div class="flex space-x-2 w-full sm:w-auto">
+                            <button onclick="saveToGoogleSheet()" class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors gap-1.5">
+                                <i class="fa-solid fa-table-list"></i> 구글시트로 저장
+                            </button>
                             <button onclick="downloadThumbnail()" class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors gap-1.5">
                                 <i class="fa-solid fa-download"></i> 이미지 받기
                             </button>
@@ -278,7 +293,7 @@
                                     <!-- 이미지 로딩용 오버레이 스피너 -->
                                     <div id="imageLoader" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center text-white hidden">
                                         <i class="fa-solid fa-circle-notch animate-spin text-3xl mb-2 text-rose-400"></i>
-                                        <span class="text-xs text-rose-100">Imagen 4.0이 드로잉 하는 중...</span>
+                                        <span class="text-xs text-rose-100">Nano Banana가 드로잉 하는 중...</span>
                                     </div>
                                 </div>
                             </div>
@@ -404,7 +419,7 @@
     <!-- 푸터 -->
     <footer class="bg-white border-t border-slate-200 py-6 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400 space-y-2">
-            <p>© 2026 중국 여행 감성 기획 발전소. Powered by Gemini 3 Flash & Imagen 4.0.</p>
+            <p>© 2026 중국 여행 감성 기획 발전소. Powered by Gemini 3 Flash & Gemini 2.5 Flash Image.</p>
             <p>언제든 제목이나 문구를 더블클릭/수정하여 귀하의 실제 여정과 피드백에 완벽하게 일치시킬 수 있습니다.</p>
         </div>
     </footer>
@@ -428,8 +443,13 @@
             return localStorage.getItem('gemini_api_key') || '';
         }
 
+        function getSheetUrl() {
+            return localStorage.getItem('sheet_webapp_url') || '';
+        }
+
         function openSettingsModal() {
             document.getElementById('apiKeyInput').value = getApiKey();
+            document.getElementById('sheetUrlInput').value = getSheetUrl();
             const modal = document.getElementById('settingsModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -448,14 +468,22 @@
                 return;
             }
             localStorage.setItem('gemini_api_key', key);
-            showToast('API 키가 저장되었습니다.');
+
+            const sheetUrl = document.getElementById('sheetUrlInput').value.trim();
+            if (sheetUrl) {
+                localStorage.setItem('sheet_webapp_url', sheetUrl);
+            }
+
+            showToast('설정이 저장되었습니다.');
             closeSettingsModal();
         }
 
         function clearApiKey() {
             localStorage.removeItem('gemini_api_key');
+            localStorage.removeItem('sheet_webapp_url');
             document.getElementById('apiKeyInput').value = '';
-            showToast('API 키가 삭제되었습니다.');
+            document.getElementById('sheetUrlInput').value = '';
+            showToast('설정이 삭제되었습니다.');
         }
 
         window.onload = function() {
@@ -662,7 +690,7 @@
                 renderParsedContent(parsedData, dest, vibe, platform);
 
                 // 썸네일 이미지 자동 생성
-                updateProgress(90, 'Imagen 4.0으로 독창적인 고품질 시각 이미지를 그리는 중...');
+                updateProgress(90, 'Nano Banana로 독창적인 고품질 시각 이미지를 그리는 중...');
                 await generateThumbnailImage(parsedData.imagePrompt);
 
                 // 화면 전환 완료
@@ -787,14 +815,13 @@
             try {
                 const apiKey = getApiKey();
                 if (!apiKey) { throw new Error('API 키 없음'); }
-                const imageUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+                const imageUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
 
                 const response = await fetch(imageUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        instances: [{ prompt: prompt }],
-                        parameters: { "sampleCount": 1 }
+                        contents: [{ parts: [{ text: prompt }] }]
                     })
                 });
 
@@ -805,12 +832,15 @@
                 }
                 
                 const result = await response.json();
-                const base64Data = result.predictions?.[0]?.bytesBase64Encoded;
+                const parts = result.candidates?.[0]?.content?.parts || [];
+                const imagePart = parts.find(p => p.inlineData);
+                const base64Data = imagePart?.inlineData?.data;
+                const mimeType = imagePart?.inlineData?.mimeType || 'image/png';
                 
                 if (base64Data) {
-                    imgEl.src = `data:image/png;base64,${base64Data}`;
+                    imgEl.src = `data:${mimeType};base64,${base64Data}`;
                 } else {
-                    throw new Error('인코딩 데이터 유실 (predictions 응답 없음)');
+                    throw new Error('인코딩 데이터 유실 (이미지 파트 없음)');
                 }
             } catch (err) {
                 console.error(err);
@@ -818,6 +848,49 @@
                 showToast('썸네일 생성 실패: ' + err.message, false);
             } finally {
                 loader.classList.add('hidden');
+            }
+        }
+
+        // 결과를 구글 시트로 전송 (Apps Script 웹앱 경유)
+        async function saveToGoogleSheet() {
+            const sheetUrl = getSheetUrl();
+            if (!sheetUrl) {
+                showToast('먼저 설정(⚙️)에서 구글 시트 URL을 등록해 주세요.', false);
+                openSettingsModal();
+                return;
+            }
+            if (!currentContentData) {
+                showToast('저장할 콘텐츠가 없습니다. 먼저 기획서를 생성해 주세요.', false);
+                return;
+            }
+
+            const payload = {
+                destination: lastGeneratedDestination || document.getElementById('destination').value.trim(),
+                travelPurpose: document.getElementById('travelPurpose').value.trim(),
+                vibe: lastGeneratedVibe || '',
+                platform: document.getElementById('platform').value,
+                userImpression: document.getElementById('userImpression').value.trim(),
+                title1: currentContentData.titles?.[0] || '',
+                title2: currentContentData.titles?.[1] || '',
+                title3: currentContentData.titles?.[2] || '',
+                marketingCopy: document.getElementById('copySectionText').innerText || currentContentData.marketingCopy || '',
+                scriptJson: JSON.stringify(currentContentData.script || []),
+                imagePrompt: lastGeneratedPrompt || currentContentData.imagePrompt || ''
+            };
+
+            try {
+                showToast('구글 시트로 저장하는 중...');
+                // Apps Script 웹앱은 CORS 응답 헤더를 보내지 않으므로 no-cors로 전송
+                await fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload)
+                });
+                showToast('구글 시트에 저장되었습니다! (시트를 열어 확인해 보세요)');
+            } catch (err) {
+                console.error(err);
+                showToast('구글 시트 저장 실패: ' + err.message, false);
             }
         }
 
@@ -861,7 +934,7 @@
                 Reflect the following feedback instructions to modify the JSON data appropriately:
                 "${feedback}"
 
-                Return the response strictly in the exact same JSON schema format as before. Do not include any text before or after the JSON structure. Make sure titles, marketingCopy, and script are in Korean, and imagePrompt remains a high-quality descriptive English prompt for Imagen 4.0.`;
+                Return the response strictly in the exact same JSON schema format as before. Do not include any text before or after the JSON structure. Make sure titles, marketingCopy, and script are in Korean, and imagePrompt remains a high-quality descriptive English prompt for an AI image generator.`;
 
                 const apiKey = getApiKey();
                 if (!apiKey) { showToast('Gemini API 키가 설정되지 않았습니다. 설정(⚙️)에서 입력해 주세요.', false); openSettingsModal(); throw new Error('API 키 없음'); }
