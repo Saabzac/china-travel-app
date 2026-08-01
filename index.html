@@ -59,6 +59,8 @@
     </header>
 
     <!-- API 키 설정 모달 -->
+    <iframe name="sheetTargetFrame" style="display:none;" title="구글시트 저장용 (숨김)"></iframe>
+
     <div id="settingsModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 px-4">
         <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
             <div class="flex items-center justify-between mb-4">
@@ -852,7 +854,7 @@
         }
 
         // 결과를 구글 시트로 전송 (Apps Script 웹앱 경유)
-        async function saveToGoogleSheet() {
+        function saveToGoogleSheet() {
             const sheetUrl = getSheetUrl();
             if (!sheetUrl) {
                 showToast('먼저 설정(⚙️)에서 구글 시트 URL을 등록해 주세요.', false);
@@ -878,20 +880,33 @@
                 imagePrompt: lastGeneratedPrompt || currentContentData.imagePrompt || ''
             };
 
-            // Apps Script의 /exec 주소는 내부적으로 302 리다이렉트를 거치는데,
-            // fetch의 POST는 리다이렉트 시 자동으로 GET으로 강등되는 브라우저 스펙 동작이 있어
-            // doPost가 아예 호출되지 않는 문제가 있다. 그래서 GET 쿼리스트링 방식으로 전송한다.
-            const params = new URLSearchParams(payload);
-            const fullUrl = `${sheetUrl}?${params.toString()}`;
-
-            if (fullUrl.length > 7500) {
-                showToast('스크립트 내용이 길어 일부가 저장되지 않을 수 있습니다.', false);
-            }
-
+            // fetch(no-cors)로 GET을 보내면 Apps Script의 302 리다이렉트 처리 과정에서
+            // 쿼리 파라미터 값이 유실되는 문제가 있다. 대신 숨겨진 <form>을 숨겨진 <iframe>으로
+            // 제출하는 방식(실제 브라우저 내비게이션)을 사용하면 값이 안정적으로 전달된다.
             try {
                 showToast('구글 시트로 저장하는 중...');
-                await fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
-                showToast('구글 시트에 저장되었습니다! (시트를 열어 확인해 보세요)');
+
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = sheetUrl;
+                form.target = 'sheetTargetFrame';
+                form.style.display = 'none';
+
+                Object.entries(payload).forEach(([key, value]) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    form.appendChild(input);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+                setTimeout(() => document.body.removeChild(form), 1000);
+
+                setTimeout(() => {
+                    showToast('구글 시트에 저장되었습니다! (시트를 열어 확인해 보세요)');
+                }, 800);
             } catch (err) {
                 console.error(err);
                 showToast('구글 시트 저장 실패: ' + err.message, false);
