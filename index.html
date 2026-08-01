@@ -642,7 +642,11 @@
                     })
                 });
 
-                if (!response.ok) throw new Error('AI 분석 도중 예기치 못한 에러가 발생했습니다.');
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => null);
+                    const detail = errBody?.error?.message || `HTTP ${response.status}`;
+                    throw new Error(`AI 분석 도중 에러가 발생했습니다 (${detail})`);
+                }
                 
                 const textResult = await response.json();
                 const jsonText = textResult.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -794,7 +798,11 @@
                     })
                 });
 
-                if (!response.ok) throw new Error('이미지 생성 API 응답 실패');
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => null);
+                    const detail = errBody?.error?.message || `HTTP ${response.status}`;
+                    throw new Error(`이미지 생성 API 응답 실패 (${detail})`);
+                }
                 
                 const result = await response.json();
                 const base64Data = result.predictions?.[0]?.bytesBase64Encoded;
@@ -896,7 +904,11 @@
                     })
                 });
 
-                if (!response.ok) throw new Error('변용 작업 중 오류 발생');
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => null);
+                    const detail = errBody?.error?.message || `HTTP ${response.status}`;
+                    throw new Error(`변용 작업 중 오류 발생 (${detail})`);
+                }
 
                 const textResult = await response.json();
                 const jsonText = textResult.candidates?.[0]?.content?.parts?.[0]?.text;
