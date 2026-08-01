@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized China Travel Content AI Studio</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter & Noto Sans KR) -->
+     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+        /* 스크롤바 디자인 커스텀 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+ <link rel="manifest" href="manifest.json">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+    <!-- 네비게이션바/헤더 -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-rose-600 to-amber-500 p-2.5 rounded-xl shadow-md shadow-rose-100 flex items-center justify-center">
+                    <i class="fa-solid fa-earth-asia text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold bg-gradient-to-r from-slate-900 to-rose-700 bg-clip-text text-transparent">China Travel Content AI Co-Planner</h1>
+                    <p class="text-xs text-slate-500">The intelligent copy & visual designer that captures your memories and feelings</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
+                    <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                    Interactive Modeler Active
+                </span>
+                <button id="settingsBtn" onclick="openSettingsModal()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-rose-600 transition" title="API Key Settings">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- API 키 설정 모달 -->
+    <iframe name="sheetTargetFrame" style="display:none;" title="Hidden Google Sheet submission target"></iframe>
+
+    <div id="settingsModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 px-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-slate-800">
+                    <i class="fa-solid fa-key text-rose-600 mr-2"></i>Gemini API Key Settings
+                </h2>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <p class="text-sm text-slate-500 mb-4 leading-relaxed">
+                This app uses the Google Gemini API. Enter your own API key below and it will be
+                <b>stored only in this browser</b> — never sent to anyone else or any server.
+            </p>
+            <input id="apiKeyInput" type="password" placeholder="Paste your API key starting with AIza"
+                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-rose-400">
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-rose-600 hover:underline mb-4 inline-block">
+                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Get a free API key from Google AI Studio
+            </a>
+
+            <hr class="my-4 border-slate-100">
+
+            <h3 class="text-sm font-bold text-slate-800 mb-2">
+                <i class="fa-solid fa-table text-emerald-600 mr-2"></i>Save to Google Sheets (optional)
+            </h3>
+            <p class="text-xs text-slate-500 mb-3 leading-relaxed">
+                If you want results automatically saved to Google Sheets, register your Apps Script web app URL.
+            </p>
+            <input id="sheetUrlInput" type="text" placeholder="https://script.google.com/macros/s/.../exec"
+                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+
+            <div class="flex gap-2 mt-2">
+                <button onclick="saveApiKey()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-lg transition">
+                    Save
+                </button>
+                <button onclick="clearApiKey()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm">
+                    Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 레이아웃 컨테이너 -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- 왼쪽 컬럼: 설정 및 입력 (lg:col-span-4) -->
+            <section class="lg:col-span-4 space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                    <div class="border-b border-slate-100 pb-4">
+                        <h2 class="text-md font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-rose-600"></i> Emotional Planning Studio
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">Blends your destination details with your personal memories.</p>
+                    </div>
+
+                    <!-- 목적지 입력 -->
+                    <div class="space-y-2">
+                        <label for="destination" class="block text-sm font-semibold text-slate-700">Travel Destination</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-map-pin text-slate-400"></i>
+                            </div>
+                            <input type="text" id="destination" placeholder="e.g. Lijiang Yunnan, Zhangjiajie, Shanghai" 
+                                class="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white text-sm transition-all placeholder:text-slate-400"
+                                value="Lijiang, Yunnan">
+                        </div>
+                        <!-- 추천 키워드 태그 -->
+                        <div class="flex flex-wrap gap-1.5 mt-2">
+                            <button onclick="setDestination('Lijiang & the Ancient Tea-Horse Road, Yunnan')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition-colors">#Yunnan</button>
+                            <button onclick="setDestination('Taihang Mountains & Huangshan scenery')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition-colors">#Taihang</button>
+                            <button onclick="setDestination('Beijing imperial culture tour')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition-colors">#Beijing</button>
+                            <button onclick="setDestination('Zhangjiajie \'Avatar\' scenery')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition-colors">#Zhangjiajie</button>
+                        </div>
+                    </div>
+
+                    <!-- 일정을 정하게 된 여행 목적 -->
+                    <div class="space-y-2">
+                        <label for="travelPurpose" class="block text-sm font-semibold text-slate-700">Purpose / Motivation for This Trip</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-route text-slate-400"></i>
+                            </div>
+                            <input type="text" id="travelPurpose" placeholder="e.g. Parents' 60th birthday trip, post-resignation healing tour" 
+                                class="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white text-sm transition-all placeholder:text-slate-400"
+                                value="Parents' 60th birthday family trip">
+                        </div>
+                        <!-- 추천 목적 태그 -->
+                        <div class="flex flex-wrap gap-1.5 mt-2">
+                            <button onclick="setTravelPurpose('Parents\' 60th birthday family trip')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition-colors">#FamilyTrip</button>
+                            <button onclick="setTravelPurpose('Post-resignation healing journey to find myself')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition-colors">#SelfDiscovery</button>
+                            <button onclick="setTravelPurpose('Friends trip for epic photos')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition-colors">#FriendsTrip</button>
+                            <button onclick="setTravelPurpose('Refresh vacation and food tour')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition-colors">#FoodTour</button>
+                        </div>
+                    </div>
+
+                    <!-- 나의 여행 감상 / 강조할 포인트 -->
+                    <div class="space-y-2">
+                        <label for="userImpression" class="block text-sm font-semibold text-slate-700 flex justify-between">
+                            <span>My Travel Impressions / Memorable Moments</span>
+                            <span class="text-[10px] text-slate-400 font-normal">Optional</span>
+                        </label>
+                        <textarea id="userImpression" rows="3" placeholder="e.g. The quiet rain-soaked alleys felt so peaceful, sipping tea while gazing at the mountains, the aroma of a local night market"
+                            class="block w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white text-xs transition-all placeholder:text-slate-400 resize-none"></textarea>
+                        <p class="text-[10px] text-slate-400 leading-relaxed">
+                            💡 The sensory details and memories you write here will be woven into the titles, marketing copy, script, and thumbnail style.
+                        </p>
+                    </div>
+
+                    <!-- 콘텐츠 테마 / 바이브 -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-slate-700">Travel Mood & Theme</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="relative flex items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-rose-500">
+                                <input type="radio" name="vibe" value="Nature & Healing" class="sr-only" checked>
+                                <div class="text-center">
+                                    <i class="fa-solid fa-mountain text-rose-500 mb-1 text-sm block"></i>
+                                    <span class="text-xs font-medium text-slate-700">Nature/Healing</span>
+                                </div>
+                            </label>
+                            <label class="relative flex items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-rose-500">
+                                <input type="radio" name="vibe" value="History & Culture" class="sr-only">
+                                <div class="text-center">
+                                    <i class="fa-solid fa-building-columns text-amber-600 mb-1 text-sm block"></i>
+                                    <span class="text-xs font-medium text-slate-700">History/Culture</span>
+                                </div>
+                            </label>
+                            <label class="relative flex items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-rose-500">
+                                <input type="radio" name="vibe" value="Food & Street Eats" class="sr-only">
+                                <div class="text-center">
+                                    <i class="fa-solid fa-bowl-hot text-emerald-600 mb-1 text-sm block"></i>
+                                    <span class="text-xs font-medium text-slate-700">Food/Street Eats</span>
+                                </div>
+                            </label>
+                            <label class="relative flex items-center justify-center p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-rose-500">
+                                <input type="radio" name="vibe" value="Adventure & Activities" class="sr-only">
+                                <div class="text-center">
+                                    <i class="fa-solid fa-person-hiking text-cyan-600 mb-1 text-sm block"></i>
+                                    <span class="text-xs font-medium text-slate-700">Adventure/Trekking</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 타겟 플랫폼 -->
+                    <div class="space-y-2">
+                        <label for="platform" class="block text-sm font-semibold text-slate-700">Output Platform Format</label>
+                        <select id="platform" class="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white text-sm transition-all">
+                            <option value="YouTube Shorts / Instagram Reels (under 60 sec)">YouTube Shorts / IG Reels (short & punchy)</option>
+                            <option value="YouTube Long-form (about 3-5 min)">YouTube Long-form (detailed emotional guide)</option>
+                            <option value="Blog / Instagram carousel">Instagram feed & long-form SNS post</option>
+                        </select>
+                    </div>
+
+                    <!-- 생성 버튼 -->
+                    <button id="btnGenerate" onclick="generateAllContent()" class="w-full bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-700 hover:to-amber-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-rose-100 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Plan & Thumbnail
+                    </button>
+                </div>
+
+                <!-- 히스토리 보관함 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-history text-slate-400"></i> Planning History
+                    </h3>
+                    <div id="historyList" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                        <p class="text-xs text-slate-400 text-center py-4">No saved plans yet.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 오른쪽 컬럼: 결과물 뷰어 (lg:col-span-8) -->
+            <section class="lg:col-span-8 space-y-6">
+
+                <!-- 로딩 오버레이 플레이스홀더 -->
+                <div id="loadingState" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center space-y-4">
+                    <div class="relative w-20 h-20 mx-auto">
+                        <div class="absolute inset-0 rounded-full border-4 border-rose-100"></div>
+                        <div class="absolute inset-0 rounded-full border-4 border-rose-600 border-t-transparent animate-spin"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <i class="fa-solid fa-earth-asia text-rose-600 text-2xl animate-pulse"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800" id="loadingTitle">Gathering Inspiration & Building Your Plan...</h3>
+                        <p class="text-sm text-slate-500 mt-1" id="loadingStatus">Gemini AI is analyzing your impressions and setting the tone.</p>
+                    </div>
+                    <!-- 진행 상태 미니 바 -->
+                    <div class="max-w-xs mx-auto bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div id="progressBar" class="bg-rose-600 h-1.5 w-1/3 transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- 결과 표시 영역 -->
+                <div id="resultContent" class="hidden space-y-6">
+                    
+                    <!-- 탭 버튼 및 결과 상단 바 -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-slate-200 gap-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold" id="badgeDest">Yunnan</span>
+                            <span class="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-bold" id="badgeVibe">Nature/Healing</span>
+                            <span class="text-slate-300 text-xs">|</span>
+                            <span class="text-xs text-slate-400 font-medium">Click any text directly to edit it</span>
+                        </div>
+                        <div class="flex space-x-2 w-full sm:w-auto">
+                            <button onclick="saveToGoogleSheet()" class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors gap-1.5">
+                                <i class="fa-solid fa-table-list"></i> Save to Sheet
+                            </button>
+                            <button onclick="downloadThumbnail()" class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors gap-1.5">
+                                <i class="fa-solid fa-download"></i> Download Image
+                            </button>
+                            <button onclick="regenerateImageOnly()" class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-lg transition-colors gap-1.5">
+                                <i class="fa-solid fa-image"></i> Redraw Thumbnail
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 상단 비주얼 영역 (썸네일 배치) -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        
+                        <!-- 썸네일 카드 -->
+                        <div class="md:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center justify-between">
+                                    <span class="flex items-center gap-2"><i class="fa-regular fa-image text-rose-600"></i> Generated Thumbnail (16:9)</span>
+                                </h3>
+                                <div class="relative rounded-xl overflow-hidden bg-slate-100 border border-slate-200 aspect-video group">
+                                    <img id="generatedImage" src="https://placehold.co/640x360/e2e8f0/64748b?text=AI+Thumbnail+Generating..." alt="Generated thumbnail" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span class="text-white text-xs bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-sm">High-quality original</span>
+                                    </div>
+                                    <!-- 이미지 로딩용 오버레이 스피너 -->
+                                    <div id="imageLoader" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center text-white hidden">
+                                        <i class="fa-solid fa-circle-notch animate-spin text-3xl mb-2 text-rose-400"></i>
+                                        <span class="text-xs text-rose-100">Nano Banana is drawing...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                                <div class="flex justify-between items-center text-[11px] text-slate-400">
+                                    <span>AI drawing prompt (edit to regenerate):</span>
+                                    <button onclick="regenerateImageOnly()" class="text-rose-600 hover:underline font-semibold text-[10px]">
+                                        <i class="fa-solid fa-arrows-rotate mr-0.5"></i> Regenerate with this prompt
+                                    </button>
+                                </div>
+                                <textarea id="promptText" rows="3" class="w-full text-xs text-slate-600 italic bg-slate-50 p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:bg-white resize-none" placeholder="Edit the English prompt here."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 추천 기획 제목들 (직접 편집 가능하도록) -->
+                        <div class="md:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-heading text-rose-600"></i> Trending Title Suggestions (click to edit)
+                                </h3>
+                                <div class="space-y-2.5" id="titleList">
+                                    <!-- 제목 항목들 동적 렌더링 -->
+                                </div>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-4 bg-rose-50/50 p-2 rounded-lg border border-rose-100/30">
+                                💡 Edit titles directly and use them for thumbnail text or video publishing.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 하단 디테일 영역 (카피 및 대본) -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+                        <!-- 광고/마케팅 카피 -->
+                        <div class="md:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                        <i class="fa-solid fa-bullhorn text-rose-600"></i> Feed Copy & Marketing Text (editable)
+                                    </h3>
+                                    <button onclick="copyContent('copySectionText')" class="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <div id="copySectionText" contenteditable="true" class="bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-slate-700 text-xs leading-relaxed whitespace-pre-wrap select-text h-[320px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white">
+                                    Marketing copy will render here...
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                                <span>Use this for blog posts or Instagram feed captions.</span>
+                                <span class="text-rose-600 font-bold">#ChinaTravel</span>
+                            </div>
+                        </div>
+
+                        <!-- 비디오 영상 스크립트 -->
+                        <div class="md:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                        <i class="fa-solid fa-clapperboard text-rose-600"></i> Direction & Script (edit any part)
+                                    </h3>
+                                    <button onclick="copyContent('scriptSectionText')" class="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy Full Script
+                                    </button>
+                                </div>
+                                <div id="scriptSectionText" class="space-y-3 h-[320px] overflow-y-auto pr-1">
+                                    <!-- 씬 타임라인이 동적으로 렌더링되는 영역 -->
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex justify-between">
+                                <span>Edit the scene directions and narration for any moment.</span>
+                                <span class="font-medium text-slate-600" id="platformDisplay">For YouTube Shorts</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 실시간 변용 & 세부 조율 피드백 루프 패널 -->
+                    <div class="bg-gradient-to-r from-slate-950 to-rose-950 p-6 rounded-2xl shadow-xl text-white space-y-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="bg-rose-500 p-2 rounded-lg text-white">
+                                <i class="fa-solid fa-wand-magic-sparkles text-sm animate-bounce"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold">AI Feedback & Refinement</h3>
+                                <p class="text-[11px] text-rose-200/80">Add your feedback to the generated content and fine-tune the tone, theme, and scene direction.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <input type="text" id="feedbackRequest" placeholder="e.g. Make the tone more upbeat and Gen-Z, or focus more on traditional teahouses than nature"
+                                class="flex-grow px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-xs text-white placeholder:text-white/40">
+                            <button onclick="applyFeedbackToContent()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-3 rounded-xl text-xs transition-colors shadow-lg shadow-rose-950/50 flex items-center gap-1.5">
+                                <i class="fa-solid fa-comment-medical"></i> Apply Feedback
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 비어있을 때 표시되는 홈 플레이스홀더 -->
+                <div id="emptyState" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center space-y-6">
+                    <div class="w-24 h-24 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto text-3xl">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <div class="max-w-md mx-auto space-y-2">
+                        <h3 class="text-xl font-bold text-slate-900">Where Memory Meets Emotion: A China Travel Content Maker</h3>
+                        <p class="text-sm text-slate-500">Tell us about a place in China you have visited or dream of visiting, and the small impressions you felt there (scenery, emotion, sound). AI will craft a personalized multimedia package just for you.</p>
+                    </div>
+                    <div class="pt-4 flex justify-center gap-3">
+                        <button onclick="setDestination('Jiuzhaigou Valley and Panda Base, Sichuan'); setTravelPurpose('Post-resignation healing journey to find myself'); setImpression('A valley so crystal-clear it felt magical, the rustle of bamboo forests'); generateAllContent();" class="text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 px-4 py-2.5 rounded-xl border border-rose-200 transition-all">
+                            ⚡ Start Sichuan Healing Tour
+                        </button>
+                        <button onclick="setDestination('Shanghai Disneyland and The Bund at night'); setTravelPurpose('Friends trip for epic photos'); setImpression('Dazzling lights spilling over the river and a mysterious castle as the night grew deeper'); generateAllContent();" class="text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 rounded-xl border border-slate-200 transition-all">
+                            ✈️ Start Shanghai Night Tour
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400 space-y-2">
+            <p>© 2026 China Travel Content AI Studio. Powered by Gemini 3 Flash & Gemini 2.5 Flash Image.</p>
+            <p>Double-click or edit any title or line of copy to match your actual journey and feedback perfectly.</p>
+        </div>
+    </footer>
+
+    <!-- 알림 상자 / 토스트 팝업 (얼럿 대신 사용) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-10 opacity-0 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2 text-xs font-medium transition-all duration-300">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-sm" id="toastIcon"></i>
+        <span id="toastMessage">Copied to clipboard.</span>
+    </div>
+
+    <script>
+        // 현재 생성 상태 및 세션 히스토리를 추적하기 위한 글로벌 변수
+        let lastGeneratedDestination = '';
+        let lastGeneratedVibe = '';
+        let lastGeneratedPrompt = '';
+        let currentContentData = null; // 피드백 연산을 위한 현재 데이터 캐싱 구조
+        let historyArray = JSON.parse(localStorage.getItem('china_travel_history') || '[]');
+
+        // --- API 키 관리 ---
+        function getApiKey() {
+            return localStorage.getItem('gemini_api_key') || '';
+        }
+
+        function getSheetUrl() {
+            return localStorage.getItem('sheet_webapp_url') || '';
+        }
+
+        function openSettingsModal() {
+            document.getElementById('apiKeyInput').value = getApiKey();
+            document.getElementById('sheetUrlInput').value = getSheetUrl();
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (!key) {
+                showToast('Please enter an API key.', false);
+                return;
+            }
+            localStorage.setItem('gemini_api_key', key);
+
+            const sheetUrl = document.getElementById('sheetUrlInput').value.trim();
+            if (sheetUrl) {
+                localStorage.setItem('sheet_webapp_url', sheetUrl);
+            }
+
+            showToast('Settings saved.');
+            closeSettingsModal();
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem('gemini_api_key');
+            localStorage.removeItem('sheet_webapp_url');
+            document.getElementById('apiKeyInput').value = '';
+            document.getElementById('sheetUrlInput').value = '';
+            showToast('Settings cleared.');
+        }
+
+        window.onload = function() {
+            renderHistoryList();
+            if (!getApiKey()) {
+                showToast('Please register your Gemini API key in Settings (⚙️) first.', false);
+                openSettingsModal();
+            }
+        };
+
+        // 검색 태그 도우미 함수
+        function setDestination(val) {
+            document.getElementById('destination').value = val;
+        }
+
+        // 여행 목적 태그 도우미 함수
+        function setTravelPurpose(val) {
+            document.getElementById('travelPurpose').value = val;
+        }
+
+        // 감상 포인트 주입 도우미
+        function setImpression(val) {
+            document.getElementById('userImpression').value = val;
+        }
+
+        // 토스트 알림창 도우미
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = message;
+            if (isSuccess) {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-sm";
+            } else {
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-rose-400 text-sm";
+            }
+
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+            }, 3000);
+        }
+
+        function copyContent(elementId) {
+            let textToCopy = '';
+            const el = document.getElementById(elementId);
+            
+            if (elementId === 'scriptSectionText') {
+                const items = el.querySelectorAll('.script-item');
+                items.forEach(item => {
+                    const time = item.querySelector('.script-time').innerText;
+                    const scene = item.querySelector('.script-scene').innerText || item.querySelector('.script-scene').value;
+                    const diag = item.querySelector('.script-diag').innerText || item.querySelector('.script-diag').value;
+                    textToCopy += `[${time}]\nVisual: ${scene}\nScript: ${diag}\n\n`;
+                });
+            } else {
+                textToCopy = el.innerText || el.textContent;
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('Copied successfully.');
+                } else {
+                    showToast('Copy failed.', false);
+                }
+            } catch (err) {
+                showToast('An error occurred while copying.', false);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // 로딩 프로그레스바 관리 함수
+        function updateProgress(percent, statusText) {
+            const bar = document.getElementById('progressBar');
+            const status = document.getElementById('loadingStatus');
+            if (bar && status) {
+                bar.style.width = `${percent}%`;
+                status.textContent = statusText;
+            }
+        }
+
+        async function generateAllContent() {
+            const dest = document.getElementById('destination').value.trim();
+            if (!dest) {
+                showToast('Please enter a China travel destination.', false);
+                return;
+            }
+
+            const travelPurpose = document.getElementById('travelPurpose').value.trim();
+            const userImpression = document.getElementById('userImpression').value.trim();
+            const selectedVibeEl = document.querySelector('input[name="vibe"]:checked');
+            const vibe = selectedVibeEl ? selectedVibeEl.value : 'Nature & Healing';
+            const platform = document.getElementById('platform').value;
+
+            // 로딩 모드 활성화 및 메인 비우기
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('resultContent').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+            
+            lastGeneratedDestination = dest;
+            lastGeneratedVibe = vibe;
+
+            try {
+                updateProgress(15, 'Starting Gemini AI emotional analysis module...');
+                
+                // 프롬프트 정의
+                const systemPrompt = `You are an expert travel content creator, narrative director, and digital marketer.
+                Your task is to generate high-converting video titles, social media marketing copy, a structured scene-by-scene script, and an image prompt based on the destination, travel purpose, vibe, platform, and optional personal travel impressions provided by the user.
+
+                Integrate the user's specific travel purpose (e.g., family filial trip, soul-searching after resignation, friend group bonding) and travel impressions/memories deeply into the feeling, aesthetic tone, and narrative of the content. For example, if it's a family/filial trip, focus on comfortable paces, warm-hearted moments, and respectful appreciation. If it's healing, focus on peaceful quietness.
+
+                Always return your response in a valid JSON format matching this schema:
+                {
+                  "titles": ["Option 1", "Option 2", "Option 3"],
+                  "marketingCopy": "Engaging marketing copy with hooks, emojis, and hashtags reflecting the user's feelings, destination charms, and travel purpose",
+                  "script": [
+                    {
+                      "time": "Segment time frame (e.g., 00:00 - 00:10)",
+                      "scene": "Visual instructions/what to show on screen",
+                      "dialogue": "Narrator line, voice-over, or subtitles in English"
+                    }
+                  ],
+                  "imagePrompt": "A highly detailed, cinematic English prompt for generating a beautiful, cinematic 16:9 travel thumbnail image. Include descriptive sensory tags, atmosphere, time of day, and photography styles. NO words, text, or letters inside the image. Just stunning visuals."
+                }
+
+                Make sure titles, marketingCopy, and script values are strictly in English.`;
+
+                const userQuery = `China travel destination: ${dest}
+Purpose/motivation for this trip: ${travelPurpose || 'None specified'}
+Desired mood/theme: ${vibe}
+Output format: ${platform}
+Personal travel impressions/memories: ${userImpression || 'None (build the tone from the destination\'s core atmosphere)'}`;
+                
+                updateProgress(45, 'Analyzing your impressions and travel purpose to build the plan...');
+
+                const apiKey = getApiKey();
+                if (!apiKey) { showToast('Gemini API key is not set. Please enter it in Settings (⚙️).', false); openSettingsModal(); throw new Error('No API key'); }
+                const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(textApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    titles: {
+                                        type: "ARRAY",
+                                        items: { type: "STRING" }
+                                    },
+                                    marketingCopy: { type: "STRING" },
+                                    script: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                time: { type: "STRING" },
+                                                scene: { type: "STRING" },
+                                                dialogue: { type: "STRING" }
+                                            },
+                                            required: ["time", "scene", "dialogue"]
+                                        }
+                                    },
+                                    imagePrompt: { type: "STRING" }
+                                },
+                                required: ["titles", "marketingCopy", "script", "imagePrompt"]
+                            }
+                        },
+                        systemInstruction: {
+                            parts: [{ text: systemPrompt }]
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => null);
+                    const detail = errBody?.error?.message || `HTTP ${response.status}`;
+                    throw new Error(`An error occurred during AI analysis (${detail})`);
+                }
+                
+                const textResult = await response.json();
+                const jsonText = textResult.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!jsonText) throw new Error('Could not parse the planning data.');
+
+                const parsedData = JSON.parse(jsonText);
+                currentContentData = parsedData; // 전역 스토리지 캐싱
+                lastGeneratedPrompt = parsedData.imagePrompt;
+
+                updateProgress(70, 'Story crafted! Now designing your personalized thumbnail...');
+
+                // UI 렌더링
+                renderParsedContent(parsedData, dest, vibe, platform);
+
+                // 썸네일 이미지 자동 생성
+                updateProgress(90, 'Nano Banana is drawing a unique, high-quality visual...');
+                await generateThumbnailImage(parsedData.imagePrompt);
+
+                // 화면 전환 완료
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('resultContent').classList.remove('hidden');
+                
+                saveToHistory(dest, vibe, travelPurpose, parsedData);
+                showToast('Planning and drawing complete!');
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+                showToast('An error occurred while building content: ' + error.message, false);
+            }
+        }
+
+        function renderParsedContent(data, dest, vibe, platform) {
+            document.getElementById('badgeDest').textContent = dest;
+            document.getElementById('badgeVibe').textContent = vibe;
+            document.getElementById('platformDisplay').textContent = platform;
+
+            // 제목 목록 렌더링 (직접 변경 가능하도록 input/contenteditable 배치)
+            const titleList = document.getElementById('titleList');
+            titleList.innerHTML = '';
+            data.titles.forEach((title, idx) => {
+                const item = document.createElement('div');
+                item.className = "flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100 hover:border-rose-200 transition-all group";
+                item.innerHTML = `
+                    <div class="flex-shrink-0 w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[10px] font-bold mt-0.5">
+                        ${idx + 1}
+                    </div>
+                    <div class="flex-grow">
+                        <input type="text" value="${title}" 
+                            class="w-full bg-transparent border-none text-xs font-semibold text-slate-800 leading-tight focus:outline-none focus:ring-1 focus:ring-rose-300 rounded px-1 transition-all"
+                            onchange="updateCachedTitle(${idx}, this.value)">
+                    </div>
+                    <button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 text-xs transition-opacity" onclick="copyTitleFromInput(this)">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                `;
+                titleList.appendChild(item);
+            });
+
+            // 마케팅 본문 렌더링
+            document.getElementById('copySectionText').textContent = data.marketingCopy;
+
+            // 대본 타임라인 렌더링
+            const scriptList = document.getElementById('scriptSectionText');
+            scriptList.innerHTML = '';
+            data.script.forEach((scene, index) => {
+                const sceneDiv = document.createElement('div');
+                sceneDiv.className = "script-item p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5 hover:border-rose-200 transition-all";
+                sceneDiv.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="script-time text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                            <i class="fa-regular fa-clock mr-1"></i>${scene.time}
+                        </span>
+                        <span class="text-[9px] text-slate-400 font-medium">Scene ${index + 1}</span>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[9px] text-slate-400 block font-bold">🎬 Visual Direction:</span>
+                        <input type="text" value="${scene.scene}" 
+                            class="script-scene w-full bg-white text-xs font-medium text-slate-500 p-2 rounded border border-slate-100 focus:outline-none focus:ring-1 focus:ring-rose-400"
+                            onchange="updateCachedScriptScene(${index}, this.value)">
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[9px] text-rose-400 block font-bold">🎤 Dialogue / Voiceover:</span>
+                        <input type="text" value="${scene.dialogue}" 
+                            class="script-diag w-full bg-white text-xs font-semibold text-slate-800 p-2 rounded border border-slate-100 focus:outline-none focus:ring-1 focus:ring-rose-400"
+                            onchange="updateCachedScriptDialogue(${index}, this.value)">
+                    </div>
+                `;
+                scriptList.appendChild(sceneDiv);
+            });
+
+            // 프롬프트 바인딩
+            document.getElementById('promptText').value = data.imagePrompt;
+        }
+
+        // UI에서 실시간 데이터 변경 시 내부 캐시 구조에도 매핑하여 정렬 보전
+        function updateCachedTitle(index, val) {
+            if (currentContentData && currentContentData.titles) {
+                currentContentData.titles[index] = val;
+            }
+        }
+
+        function updateCachedScriptScene(index, val) {
+            if (currentContentData && currentContentData.script && currentContentData.script[index]) {
+                currentContentData.script[index].scene = val;
+            }
+        }
+
+        function updateCachedScriptDialogue(index, val) {
+            if (currentContentData && currentContentData.script && currentContentData.script[index]) {
+                currentContentData.script[index].dialogue = val;
+            }
+        }
+
+        function copyTitleFromInput(btn) {
+            const inputVal = btn.previousElementSibling.querySelector('input').value;
+            navigator.clipboard?.writeText ? navigator.clipboard.writeText(inputVal) : legacyCopy(inputVal);
+            showToast('Title copied.');
+        }
+
+        function legacyCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        async function generateThumbnailImage(prompt) {
+            const imgEl = document.getElementById('generatedImage');
+            const loader = document.getElementById('imageLoader');
+
+            loader.classList.remove('hidden');
+            imgEl.src = "https://placehold.co/640x360/f1f5f9/94a3b8?text=Drawing+with+Imagen+4.0...";
+
+            try {
+                const apiKey = getApiKey();
+                if (!apiKey) { throw new Error('No API key'); }
+                const imageUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
+
+                const response = await fetch(imageUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => null);
+                    const detail = errBody?.error?.message || `HTTP ${response.status}`;
+                    throw new Error(`Image generation API request failed (${detail})`);
+                }
+                
+                const result = await response.json();
+                const parts = result.candidates?.[0]?.content?.parts || [];
+                const imagePart = parts.find(p => p.inlineData);
+                const base64Data = imagePart?.inlineData?.data;
+                const mimeType = imagePart?.inlineData?.mimeType || 'image/png';
+                
+                if (base64Data) {
+                    imgEl.src = `data:${mimeType};base64,${base64Data}`;
+                } else {
+                    throw new Error('Missing encoded data (no image part in response)');
+                }
+            } catch (err) {
+                console.error(err);
+                imgEl.src = "https://placehold.co/640x360/ffe4e6/f43f5e?text=Thumbnail+Load+Failed";
+                showToast('Thumbnail generation failed: ' + err.message, false);
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // 결과를 구글 시트로 전송 (Apps Script 웹앱 경유)
+        function saveToGoogleSheet() {
+            const sheetUrl = getSheetUrl();
+            if (!sheetUrl) {
+                showToast('Please register your Google Sheet URL in Settings (⚙️) first.', false);
+                openSettingsModal();
+                return;
+            }
+            if (!currentContentData) {
+                showToast('There is no content to save. Please generate a plan first.', false);
+                return;
+            }
+
+            const payload = {
+                destination: lastGeneratedDestination || document.getElementById('destination').value.trim(),
+                travelPurpose: document.getElementById('travelPurpose').value.trim(),
+                vibe: lastGeneratedVibe || '',
+                platform: document.getElementById('platform').value,
+                userImpression: document.getElementById('userImpression').value.trim(),
+                lang: 'en',
+                title1: currentContentData.titles?.[0] || '',
+                title2: currentContentData.titles?.[1] || '',
+                title3: currentContentData.titles?.[2] || '',
+                marketingCopy: document.getElementById('copySectionText').innerText || currentContentData.marketingCopy || '',
+                scriptJson: JSON.stringify(currentContentData.script || []),
+                imagePrompt: lastGeneratedPrompt || currentContentData.imagePrompt || ''
+            };
+
+            // fetch(no-cors)로 GET을 보내면 Apps Script의 302 리다이렉트 처리 과정에서
+            // 쿼리 파라미터 값이 유실되는 문제가 있다. 대신 숨겨진 <form>을 숨겨진 <iframe>으로
+            // 제출하는 방식(실제 브라우저 내비게이션)을 사용하면 값이 안정적으로 전달된다.
+            try {
+                showToast('Saving to Google Sheet...');
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = sheetUrl;
+                form.target = 'sheetTargetFrame';
+                form.style.display = 'none';
+
+                Object.entries(payload).forEach(([key, value]) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    form.appendChild(input);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+                setTimeout(() => document.body.removeChild(form), 1000);
+
+                setTimeout(() => {
+                    showToast('Saved to Google Sheet! (Check your sheet to confirm)');
+                }, 800);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to save to Google Sheet: ' + err.message, false);
+            }
+        }
+
+        // 사용자가 수정한 프롬프트 기준으로 즉석 이미지 재생성
+        async function regenerateImageOnly() {
+            const editablePrompt = document.getElementById('promptText').value.trim();
+            if (!editablePrompt) {
+                showToast('The prompt text is empty.', false);
+                return;
+            }
+            lastGeneratedPrompt = editablePrompt;
+            showToast('Redrawing the thumbnail with the new direction and mood.');
+            await generateThumbnailImage(editablePrompt);
+        }
+
+        async function applyFeedbackToContent() {
+            const feedback = document.getElementById('feedbackRequest').value.trim();
+            if (!feedback) {
+                showToast('Please enter your feedback instructions.', false);
+                return;
+            }
+
+            if (!currentContentData) {
+                showToast('Please generate an initial plan first before applying edits.', false);
+                return;
+            }
+
+            // 복사 텍스트 에어리어에서 사용자가 수정한 본문을 직접 캐싱에 적용
+            currentContentData.marketingCopy = document.getElementById('copySectionText').innerText;
+
+            // 로딩 모듈
+            document.getElementById('resultContent').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+            updateProgress(30, 'Reworking the concept based on your feedback...');
+
+            try {
+                const systemPrompt = `You are an editing-focused AI travel planner. Your task is to modify the existing travel content suite according to the user's feedback.
+                Here is the current state of the content:
+                ${JSON.stringify(currentContentData)}
+
+                Reflect the following feedback instructions to modify the JSON data appropriately:
+                "${feedback}"
+
+                Return the response strictly in the exact same JSON schema format as before. Do not include any text before or after the JSON structure. Make sure titles, marketingCopy, and script are in English, and imagePrompt remains a high-quality descriptive English prompt for an AI image generator.`;
+
+                const apiKey = getApiKey();
+                if (!apiKey) { showToast('Gemini API key is not set. Please enter it in Settings (⚙️).', false); openSettingsModal(); throw new Error('No API key'); }
+                const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                updateProgress(60, 'Refining the script dialogue and copy tone based on your edits...');
+
+                const response = await fetch(textApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `User feedback to apply: ${feedback}` }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    titles: { type: "ARRAY", items: { type: "STRING" } },
+                                    marketingCopy: { type: "STRING" },
+                                    script: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                time: { type: "STRING" },
+                                                scene: { type: "STRING" },
+                                                dialogue: { type: "STRING" }
+                                            },
+                                            required: ["time", "scene", "dialogue"]
+                                        }
+                                    },
+                                    imagePrompt: { type: "STRING" }
+                                },
+                                required: ["titles", "marketingCopy", "script", "imagePrompt"]
+                            }
+                        },
+                        systemInstruction: {
+                            parts: [{ text: systemPrompt }]
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => null);
+                    const detail = errBody?.error?.message || `HTTP ${response.status}`;
+                    throw new Error(`An error occurred during the revision (${detail})`);
+                }
+
+                const textResult = await response.json();
+                const jsonText = textResult.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!jsonText) throw new Error('Could not decode the revised result.');
+
+                const parsedData = JSON.parse(jsonText);
+                currentContentData = parsedData; // 최신화 캐싱
+
+                updateProgress(85, 'Feedback applied! Regenerating the thumbnail to match the new mood...');
+                renderParsedContent(parsedData, lastGeneratedDestination, lastGeneratedVibe, "Feedback-tuned format");
+
+                // 프롬프트가 이전과 달라졌을 경우 이미지만 자동 재생성
+                if (parsedData.imagePrompt !== lastGeneratedPrompt) {
+                    lastGeneratedPrompt = parsedData.imagePrompt;
+                    await generateThumbnailImage(parsedData.imagePrompt);
+                }
+
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('resultContent').classList.remove('hidden');
+                document.getElementById('feedbackRequest').value = ''; // 입력 초기화
+
+                showToast('Your feedback has been successfully applied!');
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('resultContent').classList.remove('hidden');
+                showToast('An error occurred while applying feedback: ' + error.message, false);
+            }
+        }
+
+        // 이미지 로컬 다운로드
+        function downloadThumbnail() {
+            const img = document.getElementById('generatedImage');
+            if (img.src.startsWith('data:image')) {
+                const link = document.createElement('a');
+                link.href = img.src;
+                link.download = `Custom_Travel_Thumbnail_${lastGeneratedDestination || 'Image'}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('Thumbnail image downloaded.');
+            } else {
+                showToast('There is no original image available to download.', false);
+            }
+        }
+
+        // 히스토리 아카이브 저장 및 갱신
+        function saveToHistory(dest, vibe, purpose, data) {
+            historyArray = historyArray.filter(item => item.dest !== dest);
+            historyArray.unshift({
+                dest: dest,
+                vibe: vibe,
+                purpose: purpose,
+                timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                data: data
+            });
+
+            if (historyArray.length > 5) {
+                historyArray.pop();
+            }
+
+            localStorage.setItem('china_travel_history', JSON.stringify(historyArray));
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const listContainer = document.getElementById('historyList');
+            if (historyArray.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No saved plans yet.</p>`;
+                return;
+            }
+
+            listContainer.innerHTML = '';
+            historyArray.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:border-rose-100 hover:bg-rose-50/10 cursor-pointer transition-all";
+                div.onclick = (e) => {
+                    if (e.target.closest('.btn-delete')) return;
+                    loadFromHistory(index);
+                };
+
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-map-location text-rose-600 text-xs"></i>
+                        <div>
+                            <p class="text-xs font-bold text-slate-800 leading-none">${item.dest}</p>
+                            <p class="text-[9px] text-slate-400 mt-1">${item.vibe} • ${item.purpose || 'No purpose set'} • ${item.timestamp}</p>
+                        </div>
+                    </div>
+                    <button class="btn-delete text-slate-300 hover:text-rose-500 text-xs p-1" onclick="deleteHistory(${index})">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        // 히스토리 불러오기
+        function loadFromHistory(index) {
+            const item = historyArray[index];
+            if (!item) return;
+
+            document.getElementById('destination').value = item.dest;
+            document.getElementById('travelPurpose').value = item.purpose || '';
+            const radios = document.querySelectorAll('input[name="vibe"]');
+            radios.forEach(radio => {
+                if (radio.value === item.vibe) radio.checked = true;
+            });
+
+            lastGeneratedDestination = item.dest;
+            lastGeneratedVibe = item.vibe;
+            lastGeneratedPrompt = item.data.imagePrompt;
+            currentContentData = item.data;
+
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('resultContent').classList.remove('hidden');
+
+            renderParsedContent(item.data, item.dest, item.vibe, "Saved session data");
+            generateThumbnailImage(item.data.imagePrompt);
+            showToast('History item reloaded successfully.');
+        }
+
+        function deleteHistory(index) {
+            historyArray.splice(index, 1);
+            localStorage.setItem('china_travel_history', JSON.stringify(historyArray));
+            renderHistoryList();
+            showToast('Deleted successfully.');
+        }
+    </script>
+</body>
+</html>
